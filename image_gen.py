@@ -22,39 +22,34 @@ class ImageGenError(Exception):
 
 class GLMImageClient:
     def __init__(self):
-        self.api_key = config.GLM_API_KEY
-        self.base_url = config.GLM_BASE_URL
-        self.model = config.GLM_MODEL
-        self.size = config.IMAGE_SIZE
-        self.quality = config.IMAGE_QUALITY
-        self.watermark_enabled = config.WATERMARK_ENABLED
-        self.num_candidates = config.NUM_CANDIDATES
-        self.output_dir = config.OUTPUT_DIR
+        # 不缓存配置：生成时实时读取 config，使 Web 配置页的改动无需重启即生效
+        pass
 
     def generate_candidates(self, prompt: str) -> list[Path]:
         """串行生成 num_candidates 张图，保存到本地，返回文件路径列表。"""
-        task_dir = self.output_dir / time.strftime("%Y%m%d_%H%M%S")
+        n = max(1, config.NUM_CANDIDATES)
+        task_dir = config.OUTPUT_DIR / time.strftime("%Y%m%d_%H%M%S")
         task_dir.mkdir(parents=True, exist_ok=True)
 
         paths: list[Path] = []
-        for i in range(1, self.num_candidates + 1):
+        for i in range(1, n + 1):
             paths.append(self._gen_one(prompt, task_dir, i))
-            if i < self.num_candidates:
+            if i < n:
                 time.sleep(BATCH_INTERVAL)
         return paths
 
     def _gen_one(self, prompt: str, task_dir: Path, index: int) -> Path:
         payload = {
-            "model": self.model,
+            "model": config.GLM_MODEL,
             "prompt": prompt,
-            "size": self.size,
-            "quality": self.quality,
-            "watermark_enabled": self.watermark_enabled,
+            "size": config.IMAGE_SIZE,
+            "quality": config.IMAGE_QUALITY,
+            "watermark_enabled": config.WATERMARK_ENABLED,
         }
-        headers = {"Authorization": f"Bearer {self.api_key}"}
+        headers = {"Authorization": f"Bearer {config.GLM_API_KEY}"}
         last_err: Exception | None = None
         for attempt in range(RETRY_TIMES + 1):
-            resp = requests.post(self.base_url, headers=headers, json=payload, timeout=120)
+            resp = requests.post(config.GLM_BASE_URL, headers=headers, json=payload, timeout=120)
             body = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else {}
             if resp.status_code == 200 and "data" in body:
                 url = body["data"][0]["url"]

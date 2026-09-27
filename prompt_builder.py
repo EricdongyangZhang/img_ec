@@ -2,6 +2,8 @@
 """提示词构建：从用户文字描述中解析底色（黑/白），拼装生图提示词。"""
 import re
 
+from prompt_store import DEFAULT_TEMPLATE, get_active, render
+
 BASE_BLACK = "黑色"
 BASE_WHITE = "白色"
 
@@ -28,9 +30,10 @@ def parse_base_color(text: str) -> str | None:
 
 
 def build_prompt(user_desc: str, base_color: str) -> str:
-    """把用户描述 + 底色拼成生图提示词。"""
-    return (
-        f"一件纯色{base_color}圆领短袖T恤，正面印有图案，图案设计为：{user_desc}。"
-        f"电商商品主图风格，T恤平铺拍摄，纯白背景，"
-        f"光线均匀，高清细节，专业产品摄影，面料质感真实"
-    )
+    """用当前激活的提示词模板渲染最终生图提示词。
+
+    模板来自 prompt_store（可在 Web 界面管理）；取不到时回退到内置默认模板。
+    """
+    tpl = get_active()
+    template = tpl["template"] if tpl else DEFAULT_TEMPLATE
+    return render(template, base_color, user_desc)

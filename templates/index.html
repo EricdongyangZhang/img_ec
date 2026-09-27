@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>T恤生图机器人 · 控制台</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">T恤生图机器人</div>
+    <div class="controls">
+      <span class="status-dot" id="statusDot"></span>
+      <span class="status-text" id="statusText">未启动</span>
+      <select id="channelSelect" title="通道">
+        <option value="wechat">微信通道</option>
+        <option value="web">网页手动</option>
+      </select>
+      <button id="startBtn" class="btn btn-primary">启动</button>
+      <button id="stopBtn" class="btn" disabled>停止</button>
+      <span class="state-badge" id="stateBadge" title="机器人状态">—</span>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="session">会话</button>
+    <button class="tab" data-tab="prompts">提示词</button>
+    <button class="tab" data-tab="config">配置</button>
+  </nav>
+
+  <main>
+    <!-- ===== 会话 ===== -->
+    <section class="panel active" id="panel-session">
+      <div class="chat" id="chat"></div>
+      <div class="composer">
+        <input type="text" id="simInput" placeholder="模拟用户消息（如：白色 胸前 卡通猫），回车发送" autocomplete="off">
+        <button id="simSend" class="btn btn-primary">发送</button>
+        <button id="clearSession" class="btn">清屏</button>
+      </div>
+      <p class="hint">微信通道：用手机/电脑给「文件传输助手」发消息即可触发；网页手动模式用于本地测试收发链路。</p>
+    </section>
+
+    <!-- ===== 提示词 ===== -->
+    <section class="panel" id="panel-prompts">
+      <div class="prompts-layout">
+        <aside class="tpl-list">
+          <div class="tpl-list-head">
+            <span>模板列表</span>
+            <button id="tplAdd" class="btn btn-small">+ 新增</button>
+          </div>
+          <ul id="tplUl"></ul>
+        </aside>
+        <div class="tpl-edit">
+          <label for="tplName">名称</label>
+          <input type="text" id="tplName" placeholder="模板名称">
+
+          <label for="tplText">模板内容
+            <span class="ph">占位符：{base_color}=底色，{user_desc}=用户描述</span>
+          </label>
+          <textarea id="tplText" rows="8" placeholder="一件纯色{base_color}圆领短袖T恤……{user_desc}……"></textarea>
+
+          <div class="row">
+            <button id="tplSave" class="btn btn-primary">保存</button>
+            <button id="tplActivate" class="btn">设为当前</button>
+            <button id="tplDelete" class="btn btn-danger">删除</button>
+            <span id="tplMsg" class="msg"></span>
+          </div>
+
+          <div class="preview-box">
+            <label>预览渲染效果</label>
+            <div class="row">
+              <select id="pvBase">
+                <option value="白色">白色</option>
+                <option value="黑色">黑色</option>
+              </select>
+              <input type="text" id="pvDesc" placeholder="样例描述，如：胸前卡通猫" autocomplete="off">
+              <button id="pvBtn" class="btn">预览</button>
+            </div>
+            <pre id="pvOut" class="pv-out"></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 配置 ===== -->
+    <section class="panel" id="panel-config">
+      <form id="configForm" class="config-form" autocomplete="off">
+        <div class="field">
+          <label for="GLM_API_KEY">GLM API Key</label>
+          <input type="text" id="GLM_API_KEY" name="GLM_API_KEY" placeholder="留空或不改则保持原值">
+          <small>在智谱开放平台获取；界面只显示后四位，保存时若未改动则沿用原 Key。</small>
+        </div>
+        <div class="field">
+          <label for="GLM_BASE_URL">接口地址 GLM_BASE_URL</label>
+          <input type="text" id="GLM_BASE_URL" name="GLM_BASE_URL">
+        </div>
+        <div class="field">
+          <label for="GLM_MODEL">模型 GLM_MODEL</label>
+          <input type="text" id="GLM_MODEL" name="GLM_MODEL">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="IMAGE_SIZE">图片尺寸 IMAGE_SIZE</label>
+            <select id="IMAGE_SIZE" name="IMAGE_SIZE">
+              <option value="1280x1280">1280x1280（主图）</option>
+              <option value="1088x1472">1088x1472（3:4 商品图）</option>
+              <option value="1568x1056">1568x1056（3:2）</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="IMAGE_QUALITY">质量 IMAGE_QUALITY</label>
+            <select id="IMAGE_QUALITY" name="IMAGE_QUALITY">
+              <option value="hd">hd（高清）</option>
+              <option value="standard">standard（标准）</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="NUM_CANDIDATES">候选图数量 NUM_CANDIDATES</label>
+            <input type="number" id="NUM_CANDIDATES" name="NUM_CANDIDATES" min="1" max="4">
+          </div>
+          <div class="field field-check">
+            <label for="WATERMARK_ENABLED">
+              <input type="checkbox" id="WATERMARK_ENABLED" name="WATERMARK_ENABLED">
+              开启水印 WATERMARK_ENABLED
+            </label>
+            <small>关闭水印需在智谱「个人中心-安全管理-去水印管理」签署免责声明。</small>
+          </div>
+        </div>
+        <div class="field">
+          <label for="LISTEN_CHAT">监听会话 LISTEN_CHAT</label>
+          <input type="text" id="LISTEN_CHAT" name="LISTEN_CHAT">
+          <small>修改后需重启机器人生效。</small>
+        </div>
+        <div class="field">
+          <label for="OUTPUT_DIR">输出目录 OUTPUT_DIR</label>
+          <input type="text" id="OUTPUT_DIR" name="OUTPUT_DIR">
+        </div>
+        <div class="row">
+          <button type="button" id="cfgSave" class="btn btn-primary">保存配置</button>
+          <span id="cfgMsg" class="msg"></span>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <div class="lightbox" id="lightbox"><img id="lightboxImg" alt="预览大图"></div>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
