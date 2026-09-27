@@ -1,0 +1,36 @@
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# ===== 环境与密钥（切勿提交！含 API Key）=====
+.env
+*.env.local
+
+# ===== 生成的图片与输出 =====
+output/
+
+# ===== 日志 =====
+*.log
+bot.err
+wxauto_logs/
+
+# ===== 调试/探针产物（非核心代码）=====
+uia_dump*.txt
+uia_probe.py
+uia_probe2.py
+uia_read_test.py
+listener_test.py
+probe.py
+
+# ===== IDE =====
+.idea/
+.vscode/
+*.iml
+
+# ===== 操作系统 =====
+.DS_Store
+Thumbs.db
